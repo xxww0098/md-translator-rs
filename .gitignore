@@ -1,0 +1,8 @@
+# Build output
+/target/
+
+# Credentials — NEVER commit
+providers.yaml
+
+# Test output
+target/test_output/

@@ -1,0 +1,64 @@
+# md-translator-rs provider configuration example
+#
+# Copy this file to ~/.config/md-translator-rs/providers.yaml
+# or use --config to specify a custom path.
+#
+# For the bundled standalone caller project in this repo:
+#   cp providers.yaml.example ./providers.yaml
+#   cargo run -p live-provider-smoke --
+#
+# CLI arguments always override values in this file.
+
+deeplx:
+  # DeepLX endpoint used when `--provider deep-lx`
+  deeplx_endpoint: "https://deeplx.example.com/translate"
+
+llm:
+  # OpenAI-compatible base URL (code auto-appends /v1/chat/completions)
+  openai_endpoint: "https://api.example.com"
+  api_key: "sk-your-openai-compatible-key"
+  model: "your-model-name"
+  temperature: 0.2
+
+deepl:
+  # DeepL settings used when `--provider deep-l`
+  deepl_endpoint: "https://api-free.deepl.com/v2/translate"
+  api_key: "your-deepl-api-key"
+
+performance:
+  # Number of items per batch (default: 20)
+  batch_size: 20
+  # Maximum characters per batch (default: 5000)
+  max_chars_per_batch: 5000
+  # Context window lines before/after each segment (default: 50)
+  context_window: 50
+  # Maximum concurrent requests (default: 10)
+  concurrency: 10
+  # Whether concurrency should adapt during a run (default: true)
+  adaptive_concurrency: true
+  # Initial concurrency when adaptive mode is enabled (default: 5)
+  initial_concurrency: 5
+  # Minimum concurrency floor when adaptive mode is enabled (default: 1)
+  min_concurrency: 1
+  # Maximum retry attempts on failure (default: 3)
+  retries: 3
+  # Initial retry backoff in milliseconds (default: 300)
+  retry_backoff_ms: 300
+  # Request timeout in seconds (default: 60)
+  timeout_secs: 60
+
+cache:
+  # Enable translation cache (default: true)
+  enabled: true
+  # Cache namespace for isolating different translation contexts (default: "default")
+  namespace: "default"
+
+markdown:
+  # Translate frontmatter values (default: false)
+  translate_frontmatter: false
+  # Translate content inside fenced code blocks (default: false)
+  translate_multiline_code: false
+  # Translate LaTeX math blocks (default: false)
+  translate_latex: false
+  # Translate link text inside Markdown links (default: true)
+  translate_link_text: true
