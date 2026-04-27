@@ -175,9 +175,13 @@ pub async fn run(cli: Cli) -> Result<()> {
             MdTranslatorError::Provider("failed to resolve project dirs for cache".to_string())
         })?;
     let cache = if cli.no_cache {
-        Arc::new(MemoryCache::new(10_000, std::time::Duration::from_secs(7 * 24 * 60 * 60))) as Arc<dyn crate::cache::Cache>
+        Arc::new(MemoryCache::new(
+            10_000,
+            std::time::Duration::from_secs(7 * 24 * 60 * 60),
+        )) as Arc<dyn crate::cache::Cache>
     } else {
-        Arc::new(TwoTierCache::new(project_dirs.cache_dir().to_path_buf())?) as Arc<dyn crate::cache::Cache>
+        Arc::new(TwoTierCache::new(project_dirs.cache_dir().to_path_buf())?)
+            as Arc<dyn crate::cache::Cache>
     };
     let translator = MdTranslator::new(backend, cache).with_reporter(reporter.clone());
 

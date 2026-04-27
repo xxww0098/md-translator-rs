@@ -93,3 +93,13 @@ Optional when useful:
 - Resolution: added adaptive runtime concurrency controls, structured provider HTTP errors with parsed `Retry-After`, and wave-based scheduling that increases on stable low-latency successes and decreases on 429s, timeouts, and elevated latency
 - Prevention: for provider-facing async pipelines, persist upper-bound concurrency as configuration but let the active run adapt based on observed feedback instead of assuming one static safe value
 - Related files: `src/engine.rs`, `src/error.rs`, `src/provider/mod.rs`, `src/provider/openai_compat.rs`, `src/provider/deepl.rs`, `src/provider/deeplx.rs`, `src/provider/gtx.rs`, `src/config.rs`, `providers.yaml.example`, `README.md`
+
+## Cargo prerelease dependency and disabled disk tier broke Rust 1.95 verification
+
+- Date: 2026-04-27
+- Area: cargo / cache
+- Symptom: `cargo clippy --workspace --all-targets --all-features -- -D warnings` failed before checking code because `sled = "1.0"` does not match `1.0.0-alpha.*`; after fixing dependency resolution, the two-tier cache persistence test failed because the disk tier was disabled
+- Root cause: Cargo requires prerelease dependencies to be requested explicitly, while `Cargo.lock` already contained `sled 1.0.0-alpha.124`; separately, `TwoTierCache` had drifted from its documented memory + disk behavior and only stored values in memory
+- Resolution: pinned `sled` to `1.0.0-alpha.124`, implemented `Cache` for `MemoryCache`, and restored `TwoTierCache` disk lookup/write-through with memory promotion and memory-only fallback when disk initialization fails
+- Prevention: keep manifest prerelease versions exact, run Clippy from a clean dependency resolution state, and keep cache persistence tests aligned with the documented cache layers
+- Related files: `Cargo.toml`, `src/cache/memory.rs`, `src/cache/two_tier.rs`, `src/cache/mod.rs`

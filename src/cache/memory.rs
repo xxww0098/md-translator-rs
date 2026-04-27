@@ -27,3 +27,14 @@ impl MemoryCache {
         Ok(())
     }
 }
+
+#[async_trait::async_trait]
+impl crate::cache::Cache for MemoryCache {
+    async fn get(&self, key: &str) -> Result<Option<String>> {
+        self.get(key).await
+    }
+
+    async fn set(&self, key: &str, value: &str) -> Result<()> {
+        self.set(key, value).await
+    }
+}
