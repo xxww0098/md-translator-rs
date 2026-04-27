@@ -31,6 +31,10 @@ static LIST_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^(\s*(?:[-*]|\d+\.)\s+)(.*)$").expect("valid regex"));
 static BLOCKQUOTE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(>\s)(.*)$").expect("valid regex"));
 
+// Matches any placeholder key: __MDT_<TAG>_<COUNTER>_KEEP__
+static PLACEHOLDER_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"__MDT_\w+_\d+_KEEP__").expect("valid regex"));
+
 #[derive(Debug, Clone)]
 pub struct ProtectedMarkdown {
     pub text: String,
@@ -217,12 +221,19 @@ pub fn protect_markdown(input: &str, options: &MarkdownOptions) -> ProtectedMark
     }
 }
 
+// Optimized: single-pass regex replacement instead of O(p*n*m) sequential replaces
 pub fn restore_markdown(translated: &str, protected: &ProtectedMarkdown) -> String {
-    let mut output = translated.to_string();
-    for (placeholder, value) in &protected.placeholders {
-        output = output.replace(placeholder, value);
+    if protected.placeholders.is_empty() {
+        return translated.to_string();
     }
-    output
+    PLACEHOLDER_RE
+        .replace_all(translated, |caps: &regex::Captures<'_>| {
+            caps.get(0)
+                .and_then(|m| protected.placeholders.get(m.as_str()))
+                .cloned()
+                .unwrap_or_default()
+        })
+        .to_string()
 }
 
 fn replace_with_placeholders(
@@ -252,10 +263,20 @@ fn allocate_placeholder(
     key
 }
 
+// Optimized: single-pass validation instead of O(p*n) per-placeholder scanning
 pub fn validate_placeholders(translated: &str, protected: &ProtectedMarkdown) -> bool {
-    protected.placeholders.keys().all(|placeholder| {
-        translated.matches(placeholder).count() == protected.text.matches(placeholder).count()
-    })
+    if protected.placeholders.is_empty() {
+        return true;
+    }
+    let translated_count = PLACEHOLDER_RE
+        .find_iter(translated)
+        .filter(|m| protected.placeholders.contains_key(m.as_str()))
+        .count();
+    let original_count = PLACEHOLDER_RE
+        .find_iter(&protected.text)
+        .filter(|m| protected.placeholders.contains_key(m.as_str()))
+        .count();
+    translated_count == original_count
 }
 
 fn is_probable_currency(content: &str) -> bool {

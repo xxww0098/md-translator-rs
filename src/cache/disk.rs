@@ -80,8 +80,8 @@ impl DiskCache {
             let db = self.db.lock().map_err(poison_err)?;
             db.insert(key.as_bytes(), raw)
                 .map_err(|e| MdTranslatorError::Provider(format!("sled insert error: {e}")))?;
-            db.flush()
-                .map_err(|e| MdTranslatorError::Provider(format!("sled flush error: {e}")))?;
+            // Skip explicit flush - sled has internal background flusher
+            // This reduces latency on every cache write
         }
 
         Ok(())

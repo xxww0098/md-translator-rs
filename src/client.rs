@@ -18,6 +18,7 @@ pub fn build_client() -> Client {
         .pool_max_idle_per_host(50)
         .pool_idle_timeout(Duration::from_secs(120))
         .tcp_keepalive(Duration::from_secs(30))
+        .tcp_nodelay(true)
         .timeout(Duration::from_secs(30))
         .build()
         .expect("reqwest client builder should always succeed with valid settings")

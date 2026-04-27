@@ -770,7 +770,9 @@ struct PendingAstNode {
 type AstBatch = Vec<PendingAstNode>;
 
 fn collect_segments(lines: &[String], context_window: usize) -> Vec<LineSegment> {
-    let mut segments = Vec::new();
+    // Pre-allocate based on non-empty line count estimation
+    let estimated = lines.len();
+    let mut segments = Vec::with_capacity(estimated);
 
     for (idx, line) in lines.iter().enumerate() {
         if line.trim().is_empty() {

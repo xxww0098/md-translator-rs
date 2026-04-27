@@ -5,7 +5,7 @@ use clap::{Parser, ValueEnum};
 use directories::ProjectDirs;
 use reqwest::Client;
 
-use crate::cache::TwoTierCache;
+use crate::cache::{MemoryCache, TwoTierCache};
 use crate::client::build_client;
 use crate::config::Config;
 use crate::engine::MdTranslator;
@@ -174,7 +174,11 @@ pub async fn run(cli: Cli) -> Result<()> {
         ProjectDirs::from("top", "newzone", "md-translator-rs").ok_or_else(|| {
             MdTranslatorError::Provider("failed to resolve project dirs for cache".to_string())
         })?;
-    let cache = Arc::new(TwoTierCache::new(project_dirs.cache_dir().to_path_buf())?);
+    let cache = if cli.no_cache {
+        Arc::new(MemoryCache::new(10_000, std::time::Duration::from_secs(7 * 24 * 60 * 60))) as Arc<dyn crate::cache::Cache>
+    } else {
+        Arc::new(TwoTierCache::new(project_dirs.cache_dir().to_path_buf())?) as Arc<dyn crate::cache::Cache>
+    };
     let translator = MdTranslator::new(backend, cache).with_reporter(reporter.clone());
 
     let options = if let Some(config) = &config {
